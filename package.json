@@ -1,6 +1,6 @@
 {
-  "name": "x-ray-crawler",
-  "version": "2.0.5",
+  "name": "@thegu5/x-ray-crawler",
+  "version": "2.0.6",
   "description": "x-ray's crawler",
   "main": "lib/index.js",
   "dependencies": {
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lapwinglabs/x-ray-crawler.git"
+    "url": "git+https://github.com/thegu5/x-ray-crawler.git"
   },
   "keywords": [
     "x-ray",
@@ -39,7 +39,10 @@
   "author": "Matthew Mueller",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lapwinglabs/x-ray-crawler/issues"
+    "url": "https://github.com/thegu5/x-ray-crawler/issues"
   },
-  "homepage": "https://github.com/lapwinglabs/x-ray-crawler#readme"
+  "homepage": "https://github.com/thegu5/x-ray-crawler#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
