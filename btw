@@ -1,0 +1,145 @@
+this is my first script on kour.io i hope you like it
+
+// ==UserScript==
+// @name         Daily Rewards🎁
+// @namespace    http://tampermonkey.net/
+// @version      1.8
+// @description  I got the idea from https://greasyfork.org/en/scripts/497652-kour-kp-script
+// @author       LifeOwnerFan
+// @match        *://kour.io/*
+// @grant        none
+// @run-at       document-start
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    function createModal() {
+        const modal = document.createElement('div');
+        modal.id = 'rewardModal';
+        modal.style.position = 'fixed';
+        modal.style.top = '50%';
+        modal.style.left = '50%';
+        modal.style.transform = 'translate(-50%, -50%)';
+        modal.style.padding = '20px';
+        modal.style.backgroundColor = '#1e1e1e';
+        modal.style.color = '#ffffff';
+        modal.style.borderRadius = '10px';
+        modal.style.boxShadow = '0px 4px 8px rgba(0, 0, 0, 0.3)';
+        modal.style.zIndex = 10000;
+        modal.style.fontFamily = `'Arial', sans-serif`;
+        modal.style.textAlign = 'center';
+        modal.style.width = '300px';
+
+        const currentValue = parseInt(localStorage.getItem('lastDailyReward') || '3', 10) + 2;
+
+        modal.innerHTML = `
+            <h2 style="margin-bottom: 15px;">Daily Rewards🎁</h2>
+            <label for="rewardValue" style="display: block; margin-bottom: 10px;">Set Day 3 - 30📅</label>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <button id="decreaseValue" style="${buttonStyle()}">-</button>
+                <input id="rewardValue" type="number" value="${currentValue}" min="3" max="30" style="${inputStyle()}" />
+                <button id="increaseValue" style="${buttonStyle()}">+</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="saveReward" style="${buttonStyle('100%')}">Save</button>
+                <button id="closeModal" style="${buttonStyle('100%')}">Close</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('closeModal').addEventListener('click', () => modal.remove());
+
+        const rewardInput = document.getElementById('rewardValue');
+        document.getElementById('increaseValue').addEventListener('click', () => {
+            rewardInput.value = Math.min(30, parseInt(rewardInput.value || 3, 10) + 1);
+        });
+
+        document.getElementById('decreaseValue').addEventListener('click', () => {
+            rewardInput.value = Math.max(3, parseInt(rewardInput.value || 3, 10) - 1);
+        });
+
+        document.getElementById('saveReward').addEventListener('click', () => {
+            const inputValue = parseInt(rewardInput.value, 10);
+
+            if (isNaN(inputValue) || inputValue < 3 || inputValue > 30) {
+                alert('Please enter a valid number between 3 and 30.');
+                return;
+            }
+
+            const newValue = inputValue - 2;
+            localStorage.setItem('lastDailyReward', newValue);
+
+            alert(`lastDailyReward set to: ${newValue} (input: ${inputValue})`);
+            updateFirebaseReward(newValue);
+
+
+            setTimeout(() => {
+                if (window.firebase?.auth()?.currentUser) {
+                    const user = window.firebase.auth().currentUser;
+                    showUserDetails(user.email, user);
+                }
+            }, 100);
+
+            modal.remove();
+        });
+    }
+
+    function updateFirebaseReward(value) {
+        try {
+            if (!window.firebase.auth()?.currentUser) {
+                console.error('User is not authenticated.');
+                return;
+            }
+
+            const refKey = 'users/' + window.firebase.auth().currentUser.uid;
+            const rewardObj = { lastDailyReward: value };
+
+            window.firebase.database().ref(refKey).update(rewardObj, (error) => {
+                if (error) {
+                    console.error('Failed to update Firebase:', error);
+                } else {
+                    console.log('Firebase updated successfully:', rewardObj);
+                }
+            });
+        } catch (err) {
+            console.error('Error updating Firebase:', err);
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Insert') {
+            if (!document.getElementById('rewardModal')) {
+                createModal();
+            }
+        }
+    });
+
+    function buttonStyle(width = 'auto') {
+        return `
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            width: ${width};
+            transition: all 0.3s;
+        `;
+    }
+
+    function inputStyle() {
+        return `
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #444;
+            border-radius: 5px;
+            text-align: center;
+            padding: 5px;
+            font-size: 16px;
+            width: 60px;
+        `;
+    }
+})();
